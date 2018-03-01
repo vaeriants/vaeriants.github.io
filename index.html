@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>VAE Cookbook</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+  <script type="text/javascript" async
+    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+  </script>
+</head>
+
+
+  <body>
+    <section class="page-header">
+  <img src="/assets/mila_logo_fr.svg">
+  <h1 class="project-name">VAE Cookbook</h1>
+  <h2 class="project-tagline">Chin-wei Huang, Shawn Tan</h2>
+  <!---<a href="https://arxiv.org/abs/" class="btn">Read on arXiv</a>
+  <a href="https://vaeriants.github.io" class="btn">View on GitHub</a>
+  <a href="https://vaeriants.github.io/zipball/master" class="btn">Download .zip</a>
+  <a href="https://vaeriants.github.io/tarball/master" class="btn">Download .tar.gz</a> //-->
+
+</section>
+
+
+    <section class="main-content">
+      
+      <hr />
+
+<h1 id="introduction">Introduction</h1>
+<p>Deep generative models are popular nowadays when used for unsupervised
+learning and for modeling structured outputs. In both cases, the
+variable that one wants to model contains some structure that cannot be
+modeled simply via describing its lower order moment or linear
+correlation. Examples include natural images, natural languages, audio
+data, etc.</p>
+
+<p>There exists many ways to model the structure of a multivariate
+distribution, such as</p>
+<ol>
+  <li><strong>autoregressive models</strong> which assume the joint
+probability of the random variables can be factorized as a product of
+distributions,</li>
+  <li><strong>energy-based models</strong> that define the interaction, or
+compatibility between the values of the random variables, and</li>
+  <li><strong>latent-variable models</strong> that assume there exists an unobserved latent
+variate which can often be thought of as a lower dimensional
+representation of the data.</li>
+</ol>
+
+<p>We focus on the last category in this
+monograph, as for the problems that we are going to visit it is a
+natural assumption to make.</p>
+
+<p>Specifically, the Variational Autoencoders introduced by <a href="#kingma2013auto">(Kingma &amp; Welling, 2013)</a> assumes
+a continuous latent variable model, with a Gaussian prior in the latent
+space. It is a reasonable assumption to make in many cases, such as for
+visual imagery: when we move the latent representation of an image in
+the vicinity of the latent space, it corresponds to changes in shape,
+color, intensity of light, location of an object, or different kinds of
+high level semantics of the image.</p>
+
+<p style="text-align:center;">
+<img src="/assets/kingma14_freyface_10x10.jpg" width="280" />
+</p>
+
+<p style="text-align:center;">
+Frey face manifold from [kingma14]
+</p>
+
+<p style="text-align:center;">
+<img src="/assets/hou16_celeba.jpg" width="550" />
+</p>
+
+<p style="text-align:center;">
+CelebA faces interpolation from [hou16]
+</p>
+
+<p>However, training deep continuous latent variable models with nonlinear
+mapping between the latent code and the observed variable was not so
+successful only until recently. This is because evaluating the
+likelihood of a data instance relies on inferring the latent
+representation, and for non-linear, non-conjugate prior-likelihood pair
+inference cannot be conducted exactly, or in a computationally tractable
+way. So we need to <em>approximately</em> infer the latent representation. We
+will talk more about this in [].</p>
+
+<p>We rely heavily on a family of approximate inference techniques known as
+the <strong>Variational Inference</strong> (VI), which is to cast the inference process
+as an optimization problem by dealing with a lower or upper bound on the
+original objective. This is different from the sampling-based <em>Markov
+Chain Monte Carlo</em> (MCMC) methods in many ways. One important aspect is
+the <strong>bias-and-variance</strong> trade-off underlying these two classes of
+algorithms. The MCMC methods often result in high variance estimates but
+are asymptotically unbiased, while the VI methods have lower variance
+but due to its choice of (often well-understood and tractable)
+variational family of distributions are often biased. Even though the
+variational methods are known to have lower variance, the gradient
+estimate needed for updating the parameters during training can be very
+noisy, due to the intractable VI objective that can only be optimized
+via stochastic gradient methods. We will extend the discussion of this
+perspective more in [].</p>
+
+<p>The goal of this monograph is to cover the (1) necessary background to
+understand latent variable models and its training, different views on
+the well-known variational autoencoders: both (2) from the generative
+model point of view and (3) from the information theoretic point of
+view. We will also cover the (4) the intuition of optimizing the
+objective, (5) training details, and (6) different ways to improve the
+model, with a hope to help deep learning researchers to better
+understand the probabilistic aspect of deep generative models and how to
+use them as a tool.</p>
+
+<hr />
+
+<h1 id="table-of-contents">Table of contents</h1>
+<ul>
+  <li>Background
+    <ul>
+      <li>Latent Variable Models: What is it good for?</li>
+      <li>Training Latent Variable Models
+        <ul>
+          <li>Maximum likelihood principle recap</li>
+          <li>Make your best guess. The EM algorithm</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Variational inference
+    <ul>
+      <li>The evidence lower bound</li>
+      <li>Stochastic variational inference</li>
+      <li>Amortized variational inference</li>
+    </ul>
+  </li>
+  <li>Information theoretic intuition of the ELBO</li>
+  <li>Autoencoders as generative models</li>
+  <li>The double-edged sword: 
+<script type="math/tex">D_{KL}(q||p)</script></li>
+  <li>Improving the models: the Holy Trinity</li>
+  <li>Evaluating the model</li>
+  <li>Variance reduction</li>
+</ul>
+
+<hr />
+
+<h1 id="references">References</h1>
+
+<ol class="bibliography"><li><span id="kingma2013auto">Kingma, D. P., &amp; Welling, M. (2013). Auto-encoding variational bayes. <i>ArXiv Preprint ArXiv:1312.6114</i>.</span></li></ol>
+
+
+
+      <footer class="site-footer">
+  <span class="site-footer-credits"><a href="https://mila.umontreal.ca">MILA: Montreal Institute for Learning Algorithms</a></span>
+  <span class="site-footer-owner"><a href="">VAE Cookbook</a> is maintained by <a href="https://blog.wtf.sg">Shawn Tan</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/pietromenna/jekyll-cayman-theme">Cayman theme</a> by <a href="http://github.com/jasonlong">Jason Long</a>.</span>
+</footer>
+
+
+    </section>
+
+  </body>
+</html>
