@@ -8,17 +8,47 @@
   <link rel="stylesheet" href="/css/normalize.css">
   <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="/css/cayman.css">
-  <script type="text/javascript" async
-    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+  <script type="text/javascript" 
+    src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+	MathJax.Hub.Config({
+	  tex2jax: {
+		displayMath: [ ['$$','$$'], ['\[','\]'] ],
+		inlineMath: [['$','$'], ['\\(','\\)']],
+		processEscapes: true
+	  }
+	});
+
   </script>
 </head>
 
+  <body>
   <section class="post-header">
 	<img src="/assets/mila_logo_fr.svg">
 	<span class="project-name">VAEriants</span>
 </section>
 
-  <body>
+$$
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\h}{h}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ELBO}{\mathcal{L}}
+\newcommand{\prob}[3]{{#1}_{#2} \left( #3 \right)}
+\newcommand{\condprob}[4]{{#1}_{#2} \left( #3 \middle| #4 \right)}
+\newcommand{\expected}[2]{\mathbb{E}_{#1}\left[ #2 \right]}
+\newcommand{\KL}[2]{D_{\mathrm{KL}}\left( #1 \| #2 \right)}
+\newcommand{\pp}{\theta}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\z}{\mathbf{z}}
+\newcommand{\layers}{L}
+\newcommand{\dimpp}{D}
+$$
+
+
+
     <section class="main-content">
       
 
@@ -71,5 +101,6 @@
 </footer>
 
     </section>
+
   </body>
 </html>

@@ -9,8 +9,16 @@
   <link rel="stylesheet" href="/css/normalize.css">
   <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="/css/cayman.css">
-  <script type="text/javascript" async
-    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+  <script type="text/javascript" 
+    src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+	MathJax.Hub.Config({
+	  tex2jax: {
+		displayMath: [ ['$$','$$'], ['\[','\]'] ],
+		inlineMath: [['$','$'], ['\\(','\\)']],
+		processEscapes: true
+	  }
+	});
+
   </script>
 </head>
 
@@ -52,7 +60,7 @@
   <li>Information theoretic intuition of the ELBO</li>
   <li>Autoencoders as generative models</li>
   <li>The double-edged sword: 
-<script type="math/tex">D_{KL}(q||p)</script></li>
+<span class="kdmath">$D_{KL}(q||p)$</span></li>
   <li>Improving the models: the Holy Trinity</li>
   <li>Evaluating the model</li>
   <li>Variance reduction</li>
