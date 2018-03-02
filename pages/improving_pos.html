@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+  <meta charset="UTF-8">
+  <title>VAEriants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+  <script type="text/javascript" 
+    src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML">
+	MathJax.Hub.Config({
+	  tex2jax: {
+		displayMath: [ ['$$','$$'], ['\[','\]'] ],
+		inlineMath: [['$','$'], ['\\(','\\)']],
+		processEscapes: true
+	  }
+	});
+
+  </script>
+</head>
+
+  <body>
+  <section class="post-header">
+	<img src="/assets/mila_logo_fr.svg">
+	<span class="project-name">VAEriants</span>
+</section>
+<div style="display:none">
+
+$$
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\h}{h}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ELBO}{\mathcal{L}}
+\newcommand{\prob}[3]{{#1}_{#2} \left( #3 \right)}
+\newcommand{\condprob}[4]{{#1}_{#2} \left( #3 \middle| #4 \right)}
+\newcommand{\expected}[2]{\mathbb{E}_{#1}\left[ #2 \right]}
+\newcommand{\KL}[2]{D_{\mathrm{KL}}\left( #1 \| #2 \right)}
+\newcommand{\pp}{\theta}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\z}{\mathbf{z}}
+\newcommand{\layers}{L}
+\newcommand{\dimpp}{D}
+$$
+
+</div>
+
+
+    <section class="main-content">
+      <h1 id="improving-the-posterior">Improving the Posterior</h1>
+
+<table class="image">
+<tr><td><img src="/figures/2bits_gaussian.png" alt="" /></td></tr>
+<caption align="bottom"></caption>
+</table>
+
+<table class="image">
+<tr><td><img src="/figures/2bits_dsf.png" alt="" /></td></tr>
+<caption align="bottom"></caption>
+</table>
+
+<p>Recall again that one of the goals of the generative model is to allow us to sample from the distribution over $\z$, and generate reasonable examples of our data. Ideally, this also means that there has to be a mapping from the data $\x$ to the distribution over $\z$ such that marginalising out the data, we recover the defined prior over $\z$.</p>
+
+<p>Unfortunately, defining the approximate posterior as a Gaussian may not satisfy this requirement well enough. 
+Consider a two-bit example: we sample $(x_a,x_b)$ from two independent Bernoulli distributions both with probability being $0.5$.
+There are four possibilities. 
+And we want to learn a VAE on this dataset.
+If we assume the approximate posteriors to be Gaussians (see left of Figure \ref{ref:gauss_vs_flow}), then we would end up with an aggregate posterior $q(z) = \sum_{i=1}^4 q(z_i|x_i)\tilde{p}(x_i)$ being a mixture of Gaussians that fails to be prior-like ($p(z)=\N(z;0,I)$ in this case).
+This is because the posterior distributions fail to capture the true ones, and if our inference network $q(z|x)$ is good enough to perfectly model the true posteriors, the aggregate posteriors should be the shape of the prior (see right of Figure \ref{ref:gauss_vs_flow}). See <a href="#hoffman2016elbo">(Hoffman &amp; Johnson, 2016)</a> or <a href="#huang2017led">(Huang et al., 2017)</a> for the derivation.</p>
+
+<p>Turns out, the easiest remedy to this is to have a better posterior. 
+With a bit of rearrangement and the introduction of a few new notations, the variational gap can be divided into the following three parts:</p>
+
+<div class="kdmath">$$
+\begin{split}
+\log p_{\theta}(x) - &\ELBO(\theta, \phi; x) = \\
+&\underset{\text{Gap 1}}{\underbrace{\KL{q^*}{p}}} + \underset{\text{Gap 2}}{\underbrace{[\KL{q^*_\theta}{p}-\KL{q^*}{p}]}} + \underset{\text{Gap 3}}{\underbrace{[\KL{q_\theta}{p}-\KL{q^*_\theta}{p}]}}
+\end{split}
+$$</div>
+
+<p>where</p>
+<ul>
+  <li>$p$ is the true posterior</li>
+  <li>$q^*$ is the optimal approximate posterior within the family <span class="kdmath">$\mathcal{Q}=\{q\in \mathcal{Q}\}$</span></li>
+  <li><span class="kdmath">$q^*_{\phi}$</span> is the optimal approximate posterior within the family <span class="kdmath">$\mathcal{Q}_\phi\subseteq\mathcal{Q}$</span> due to the amortized inference via the conditional mapping $\phi\in\Phi:x\rightarrow \pi_q(x;\phi)$ where $\pi_q$ denotes the parameters of distribution $q$, and finally</li>
+  <li>$q_\phi$ is the approximate posterior that we are analyzing.</li>
+</ul>
+
+<p>The first gap and the combination of Gap 2 and Gap 3 are what <a href="#cremer2017inference">(Cremer, Li, &amp; Duvenaud, 2017)</a> called <em>approximation gap</em> and <em>amortization gap</em>.
+With these, we know that there are three pieces to improve in order to make the variational gap smaller:</p>
+
+<ol>
+  <li>better $\mathcal{Q}$, i.e. the choice of family of distributions. This can be achieved by choosing a larger family of distributions (such as normalizing flows).</li>
+  <li>better $\Phi$, i.e. better amortized inference. This can be achieved by having a higher capacity encoder.</li>
+  <li>better $\phi$, i.e. better encoder within the family $\Phi$. This can be achieved by improving the optimization scheme.</li>
+</ol>
+
+<!---
+In Table \ref{tb:betterpos} we list a few approaches designed to improve variational inference by making the variational gap smaller. 
+
+\begin{table}
+\caption{Methods that aim at reducing the variational gap.}
+\label{tb:betterpos}
+\centering
+\begin{tabular}{lccc}
+\toprule
+& Gap 1 & Gap 2 & Gap 3 \\
+\midrule
+Better optimization &&&\xmark\\
+Better encoder \cite{cremer2017inference}&&\xmark&\\
+Normalizing flows \cite{rezende2015variational,kingma2016improving,huang2017facilitating} &\xmark&&\\
+Hierarchical VI \cite{ranganath2016hierarchical,maaloe2016auxiliary}&\xmark&&\\
+Implicit VI \cite{mescheder2017adversarial,huszar2017variational}&\xmark&&\\
+Variational boosting \cite{miller2016variational}&\xmark&&\\
+MCMC as part of $q_\phi$ \cite{salimans2015markov}&\xmark&&\\
+MCMC on top of $q_\phi$ \cite{de2001variational,hoffman2017learning} &\xmark&\xmark&\xmark\\
+Gradient flow \cite{duvenaud2016early} &\xmark&\xmark&\xmark\\
+Importance sampling \cite{burda2015importance}&\xmark&\xmark&\xmark\\
+\bottomrule
+\end{tabular}
+\end{table} //-->
+
+      <h2> What's next? </h2>
+      <ul>
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+            <li><a href="/pages/improving_likelihood.html">Improving the Likelihood</a></li>
+        
+      
+        
+        
+      
+        
+        
+            <li><a href="/pages/improving_prior.html">Improving the Prior</a></li>
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+        
+        
+      
+      </ul>
+      <h2> References </h2>
+      <ol class="bibliography"><li><span id="hoffman2016elbo">Hoffman, M. D., &amp; Johnson, M. J. (2016). Elbo surgery: yet another way to carve up the
+variational evidence lower bound. <i>Workshop in Advances in Approximate Bayesian Inference,
+NIPS</i>.</span></li>
+<li><span id="huang2017led">Huang, C.-W., Touati, A., Dinh, L., Drozdzal, M., Havaei, M., Charlin, L., &amp; Courville, A. (2017). Learnable Explicit Density for Continuous Latent Space and Variational Inference. <i>ArXiv e-Prints</i>.</span></li>
+<li><span id="cremer2017inference">Cremer, C., Li, X., &amp; Duvenaud, D. (2017). Inference Suboptimality in Variational Autoencoders.</span></li></ol>
+      <footer class="site-footer">
+  <span class="site-footer-credits"><a href="https://mila.umontreal.ca">MILA: Montreal Institute for Learning Algorithms</a></span>
+  <span class="site-footer-owner"><a href="http://localhost:4000">VAEriants</a> is maintained by <a href="https://blog.wtf.sg">Shawn Tan</a>.</span>
+  <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/pietromenna/jekyll-cayman-theme">Cayman theme</a> by <a href="http://github.com/jasonlong">Jason Long</a>.</span>
+</footer>
+
+    </section>
+
+  </body>
+</html>

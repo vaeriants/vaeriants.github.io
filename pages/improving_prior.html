@@ -52,43 +52,18 @@ $$
 
 
     <section class="main-content">
-      <h1 id="the-holy-trinity">The Holy Trinity</h1>
+      <h1 id="improving-the-prior">Improving the Prior</h1>
 
-<p>If we consider the standard, single-latent-variable model, there are three main pieces we define, and then optimise over:</p>
+<p>Just as we can modify the approximate posterior to fit the prior better, we can also modify the prior such that it is learned from the data.</p>
 
-<ul>
-  <li>
-    <p><strong>The approximate posterior</strong></p>
+<p>The expressivity of neural networks and developments in improving the posteriors allow the data to be mapped really well to simple priors like a Gaussian.
+So if we can already modify the posterior, why bother changing the prior?
+One reason may be due to discontinuity when interpolating in the latent space.
+If we imagine each colour code to be a different modality in the data, moving from one colour group to another will represent a drastic change in the type of data decoded <!---CW: talk about inductive bias-->. 
+This means that sampling from close regions in the latent space may not represent close relationships in the data space.
+Allowing the prior to model a lower density between these different modalities may be more ideal when the type of representation learned is more important than simply sampling data points from the model.</p>
 
-    <div class="kdmath">$$
-\condprob{q}{}{\z}{\x}
-$$</div>
-
-    <p><em>Otherwise called the _encoder</em>, or the _inference network in the context of VAEs, where they’re parameterised by a deep network (written here as $f$).
-The conditional distribution over $\z$ given the data $\x$ is usually defined as Gaussian, with parameters that are a function of $\x$,  <span class="kdmath">$\condprob{q}{}{\z}{\x} = \N\left(f_\mu(\x), f_\sigma(\x)\right)$</span>.</p>
-  </li>
-  <li>
-    <p><strong>The likelihood</strong></p>
-
-    <div class="kdmath">$$
-\condprob{p}{}{\x}{\z}
-$$</div>
-
-    <p>Otherwise called the <em>decoder</em>, or the <em>generative</em> network in the context of VAEs, where they’re also parameterised by a deep network.</p>
-  </li>
-  <li>
-    <p><strong>The prior</strong></p>
-
-    <div class="kdmath">$$
-\prob{p}{}{\z}
-$$</div>
-
-    <p>In <a href="#kingma2013auto">(Kingma &amp; Welling, 2013)</a>, this is defined $\N(\mathbf{0}, \mathbf{1})$  and not parameterised.</p>
-  </li>
-</ul>
-
-<p>All three aspects of the model can be improved, not only at the level of architecture, but in the types of distributions that are assumed for each of them in the model.</p>
-
+<p><a href="#tomczak2017vae">(Tomczak &amp; Welling, 2017)</a> proposes parameterising the prior as a mixture over a sample of the dataset, or using learned <em>pseudo-inputs</em>. <a href="#serban2016multi">(Serban, Ororbia, Alexander, Pineau, &amp; Courville, 2016)</a> introduces a prior parameterised by a piece-wise linear function. In <a href="#huang2017led">(Huang et al., 2017)</a>, the authors parameterise the prior with Real NVP transformations <a href="#dinh2016density">(Dinh, Sohl-Dickstein, &amp; Bengio, 2016)</a>.</p>
 
       <h2> What's next? </h2>
       <ul>
@@ -120,8 +95,6 @@ $$</div>
       
         
         
-            <li><a href="/pages/improving_prior.html">Improving the Prior</a></li>
-        
       
         
         
@@ -142,13 +115,14 @@ $$</div>
         
       
         
-        
-            <li><a href="/pages/variance_reduction.html">Variance Reduction</a></li>
         
       
       </ul>
       <h2> References </h2>
-      <ol class="bibliography"><li><span id="kingma2013auto">Kingma, D. P., &amp; Welling, M. (2013). Auto-encoding variational bayes. <i>ArXiv Preprint ArXiv:1312.6114</i>.</span></li></ol>
+      <ol class="bibliography"><li><span id="tomczak2017vae">Tomczak, J. M., &amp; Welling, M. (2017). VAE with a VampPrior. <i>ArXiv Preprint ArXiv:1705.07120</i>.</span></li>
+<li><span id="serban2016multi">Serban, I. V., Ororbia, I. I., Alexander, G., Pineau, J., &amp; Courville, A. (2016). Multi-modal variational encoder-decoders. <i>ArXiv Preprint ArXiv:1612.00377</i>.</span></li>
+<li><span id="huang2017led">Huang, C.-W., Touati, A., Dinh, L., Drozdzal, M., Havaei, M., Charlin, L., &amp; Courville, A. (2017). Learnable Explicit Density for Continuous Latent Space and Variational Inference. <i>ArXiv e-Prints</i>.</span></li>
+<li><span id="dinh2016density">Dinh, L., Sohl-Dickstein, J., &amp; Bengio, S. (2016). Density estimation using Real NVP. <i>ArXiv Preprint ArXiv:1605.08803</i>.</span></li></ol>
       <footer class="site-footer">
   <span class="site-footer-credits"><a href="https://mila.umontreal.ca">MILA: Montreal Institute for Learning Algorithms</a></span>
   <span class="site-footer-owner"><a href="http://localhost:4000">VAEriants</a> is maintained by <a href="https://blog.wtf.sg">Shawn Tan</a>.</span>
